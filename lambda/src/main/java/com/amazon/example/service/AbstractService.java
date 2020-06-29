@@ -28,14 +28,21 @@ public abstract class AbstractService {
     public final static String USER_LASTNAME_COL = "lastName";
     public final static String USER_AGE_COL = "age";
     public final static String USER_ID_COL = "userId";
-
+    public final static String USER_SECRET_COL = "secret";
+    
     public String getTableName() {
         return "Users";
     }
 
     protected ScanRequest scanRequest() {
         return ScanRequest.builder().tableName(getTableName())
-                .attributesToGet(USER_ID_COL, USER_USERNAME_COL, USER_FIRSTNAME_COL, USER_LASTNAME_COL, USER_AGE_COL).build();
+                .attributesToGet(
+                    USER_ID_COL,
+                    USER_USERNAME_COL,
+                    USER_FIRSTNAME_COL,
+                    USER_LASTNAME_COL,
+                    USER_AGE_COL,
+                    USER_SECRET_COL).build();
     }
 
     protected PutItemRequest putRequest(User user) {
@@ -45,6 +52,7 @@ public abstract class AbstractService {
         item.put(USER_LASTNAME_COL, AttributeValue.builder().s(user.getLastName()).build());
         item.put(USER_ID_COL, AttributeValue.builder().s(user.getUserId()).build());
         item.put(USER_AGE_COL, AttributeValue.builder().n(Integer.valueOf(user.getAge()).toString()).build());
+        item.put(USER_SECRET_COL, AttributeValue.builder().s(user.getSecret()).build());
 
         return PutItemRequest.builder()
                 .tableName(getTableName())
@@ -66,7 +74,7 @@ public abstract class AbstractService {
         return GetItemRequest.builder()
                 .tableName(getTableName())
                 .key(key)
-                .attributesToGet(USER_ID_COL, USER_USERNAME_COL, USER_FIRSTNAME_COL, USER_LASTNAME_COL, USER_AGE_COL)
+                .attributesToGet(USER_ID_COL, USER_USERNAME_COL, USER_FIRSTNAME_COL, USER_LASTNAME_COL, USER_AGE_COL, USER_SECRET_COL)
                 .build();
     }
 }

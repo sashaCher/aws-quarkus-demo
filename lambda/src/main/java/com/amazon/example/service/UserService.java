@@ -17,6 +17,10 @@ package com.amazon.example.service;
 
 import com.amazon.example.pojo.User;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import org.apache.commons.codec.binary.Base64;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.DecryptResponse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -28,26 +32,47 @@ public class UserService extends AbstractService {
 
     @Inject
     DynamoDbClient dynamoDB;
+    @Inject
+    KmsClient kms;
+    String keyArn = "alias/sasha-quarkus-demo";
 
     public List<User> findAll() {
         return dynamoDB.scanPaginator(scanRequest()).items().stream()
                 .map(User::from)
+                .map(u -> {
+                    u.setSecret(decrypt(u.getSecret()));
+                    return u;
+                })
                 .collect(Collectors.toList());
     }
 
     public String add(User user) {
+        user.setSecret(encrypt(user.getFirstName() + user.getLastName()));
         dynamoDB.putItem(putRequest(user));
 
         return user.getUserId();
     }
 
     public User get(String userId) {
-        return User.from(dynamoDB.getItem(getRequest(userId)).item());
+        User user = User.from(dynamoDB.getItem(getRequest(userId)).item());
+        user.setSecret(decrypt(user.getSecret()));
+        return user;
     }
 
     public String delete(String userId) {
         dynamoDB.deleteItem(deleteRequest(userId));
 
         return userId;
+    }
+
+    private String encrypt(String data) {
+        SdkBytes encryptedBytes = kms.encrypt(req -> req.keyId(keyArn).plaintext(SdkBytes.fromUtf8String(data))).ciphertextBlob();
+        return Base64.encodeBase64String(encryptedBytes.asByteArray());
+    }
+
+    private String decrypt(String data) {
+        SdkBytes encryptedData = SdkBytes.fromByteArray(Base64.decodeBase64(data.getBytes()));
+        DecryptResponse decrypted = kms.decrypt(req -> req.keyId(keyArn).ciphertextBlob(encryptedData));
+        return decrypted.plaintext().asUtf8String();
     }
 }

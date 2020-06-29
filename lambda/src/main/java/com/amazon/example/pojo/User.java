@@ -30,16 +30,18 @@ public class User {
     private String firstName;
     private String lastName;
     private int age;
+    private String secret;
 
     public User() {
     }
 
-    public User(String userId, String userName, String firstName, String lastName, int age) {
+    public User(String userId, String userName, String firstName, String lastName, int age, String secret) {
         this.userId = userId;
         this.userName = userName;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
+        this.secret = secret;
     }
 
     public static User from(Map<String, AttributeValue> item) {
@@ -51,6 +53,7 @@ public class User {
             user.setFirstName(item.get(AbstractService.USER_FIRSTNAME_COL).s());
             user.setLastName(item.get(AbstractService.USER_LASTNAME_COL).s());
             user.setAge(Integer.parseInt(item.get(AbstractService.USER_AGE_COL).n()));
+            user.setSecret(item.get(AbstractService.USER_SECRET_COL).s());
         }
         return user;
     }
@@ -95,6 +98,14 @@ public class User {
         this.age = age;
     }
 
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -116,6 +127,7 @@ public class User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", age=" + age +
+                ", secret=" + secret +
                 '}';
     }
 }
